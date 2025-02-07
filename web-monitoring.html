@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PureFlow Web Monitoring</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f0f4f8;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #0396FF;
+            margin: 0;
+            font-size: 2.5em;
+        }
+        #ro-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .ro-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+        .progress-bar {
+            background: #e2e8f0;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        .progress {
+            background: #0396FF;
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease-in-out;
+        }
+        .offline {
+            color: #e53e3e;
+        }
+        .online {
+            color: #38a169;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PureFlow Web Monitoring</h1>
+        </div>
+        <div id="ro-list">
+            <!-- RO devices will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        let devices = {};
+
+        function updateROList() {
+            const roList = document.getElementById('ro-list');
+            roList.innerHTML = '';
+            
+            for (const [deviceId, device] of Object.entries(devices)) {
+                const roCard = document.createElement('div');
+                roCard.className = 'ro-card';
+                roCard.innerHTML = `
+                    <h2>${deviceId}</h2>
+                    <div class="status">
+                        <span>Status:</span>
+                        <span class="${device.isOnline ? 'online' : 'offline'}">${device.isOnline ? 'Online' : 'Offline'}</span>
+                    </div>
+                    <div class="status">
+                        <span>TDS Value:</span>
+                        <span>${device.tdsValue.toFixed(2)} ppm</span>
+                    </div>
+                    <div class="status">
+                        <span>RO Flow Rate:</span>
+                        <span>${device.roFlowRate.toFixed(2)} L/min</span>
+                    </div>
+                    <div class="status">
+                        <span>Total Water Dispensed:</span>
+                        <span>${device.totalWaterDispensed.toFixed(2)} L</span>
+                    </div>
+                    <div class="status">
+                        <span>Max Water Flow:</span>
+                        <span>${device.maxWaterFlow.toFixed(2)} L</span>
+                    </div>
+                    <div class="status">
+                        <span>RO System:</span>
+                        <span>${device.isRORunning ? 'Running' : 'Stopped'}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: ${(device.totalWaterDispensed / device.maxWaterFlow) * 100}%"></div>
+                    </div>
+                `;
+                roList.appendChild(roCard);
+            }
+        }
+
+        function fetchData() {
+            // In a real-world scenario, this would be an API call to your server
+            // For demonstration purposes, we'll use simulated data
+            devices = {
+                'RO001': { isOnline: true, tdsValue: Math.random() * 200, roFlowRate: Math.random() * 10, totalWaterDispensed: Math.random() * 400, maxWaterFlow: 500, isRORunning: true },
+                'RO002': { isOnline: true, tdsValue: Math.random() * 200, roFlowRate: Math.random() * 10, totalWaterDispensed: Math.random() * 500, maxWaterFlow: 600, isRORunning: true },
+                'RO003': { isOnline: false, tdsValue: 0, roFlowRate: 0, totalWaterDispensed: 350, maxWaterFlow: 700, isRORunning: false }
+            };
+            updateROList();
+        }
+
+        function init() {
+            fetchData();
+            setInterval(fetchData, 5000); // Update every 5 seconds
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
+
