@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PureFlow User App</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f0f4f8;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #0396FF;
+            margin: 0;
+            font-size: 2em;
+        }
+        .status-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        .progress-bar {
+            background: #e2e8f0;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        .progress {
+            background: #0396FF;
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease-in-out;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+        button {
+            background: #0396FF;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0378cc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PureFlow User App</h1>
+        </div>
+        <div id="device-status" class="status-card">
+            <!-- Device status will be dynamically added here -->
+        </div>
+        <div id="filter-warning" class="warning">
+            <!-- Filter change warning will appear here when needed -->
+        </div>
+        <button onclick="requestService()">Request Service</button>
+    </div>
+
+    <script>
+        let device = {
+            id: 'RO001',
+            tdsValue: 0,
+            totalWaterDispensed: 0,
+            maxWaterFlow: 500,
+            filterChangeThreshold: 450
+        };
+
+        function updateDeviceStatus() {
+            // Simulate real-time data updates
+            device.tdsValue = Math.random() * 200;
+            device.totalWaterDispensed += Math.random() * 2;
+
+            const deviceStatus = document.getElementById('device-status');
+            deviceStatus.innerHTML = `
+                <div class="status">
+                    <span>Device ID:</span>
+                    <span>${device.id}</span>
+                </div>
+                <div class="status">
+                    <span>TDS Value:</span>
+                    <span>${device.tdsValue.toFixed(2)} ppm</span>
+                </div>
+                <div class="status">
+                    <span>Total Water Dispensed:</span>
+                    <span>${device.totalWaterDispensed.toFixed(2)} L</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress" style="width: ${(device.totalWaterDispensed / device.maxWaterFlow) * 100}%"></div>
+                </div>
+            `;
+
+            // Check if filter change is needed
+            if (device.totalWaterDispensed >= device.filterChangeThreshold) {
+                document.getElementById('filter-warning').style.display = 'block';
+                document.getElementById('filter-warning').innerText = 'Warning: It\'s time to change your filter!';
+            } else {
+                document.getElementById('filter-warning').style.display = 'none';
+            }
+        }
+
+        function requestService() {
+            // In a real app, this would send a request to the server
+            alert('Service request sent. Our team will contact you shortly.');
+        }
+
+        function init() {
+            updateDeviceStatus();
+            setInterval(updateDeviceStatus, 5000); // Update every 5 seconds
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
+
