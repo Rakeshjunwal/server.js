@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PureFlow Master Control</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f0f4f8;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Splash Screen Styles */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0396FF, #ABDCFF);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .logo {
+            width: 200px;
+            height: 200px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="white" stroke-width="8"/><path d="M30 50 Q50 30 70 50 Q50 70 30 50" fill="white"><animate attributeName="d" values="M30 50 Q50 30 70 50 Q50 70 30 50;M30 50 Q50 70 70 50 Q50 30 30 50;M30 50 Q50 30 70 50 Q50 70 30 50" dur="2s" repeatCount="indefinite"/></path></svg>') no-repeat center;
+            background-size: contain;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Main App Styles */
+        .screen {
+            display: none;
+        }
+        .header {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h1, h2 {
+            color: #0396FF;
+            margin: 0;
+        }
+        h1 {
+            font-size: 2.5em;
+        }
+        #ro-list, #search-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .ro-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .ro-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+        .progress-bar {
+            background: #e2e8f0;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        .progress {
+            background: #0396FF;
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease-in-out;
+        }
+        button {
+            background: #0396FF;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #0378cc;
+        }
+        button:disabled {
+            background: #a0aec0;
+        }
+        .offline {
+            color: #e53e3e;
+        }
+        .online {
+            color: #38a169;
+        }
+        
+        /* Search Styles */
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        #search-input {
+            width: 70%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px 0 0 5px;
+        }
+        #search-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #0396FF;
+            color: white;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        form input, form textarea {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+        }
+        form input:focus, form textarea:focus {
+            outline: none;
+            border-color: #0396FF;
+        }
+        
+        /* Navigation */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        /* User Details Styles */
+        #user-details {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #user-details h3 {
+            color: #0396FF;
+            margin-top: 0;
+        }
+        #user-details .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        #user-details .button-group button {
+            flex: 1;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <div class="logo"></div>
+    </div>
+
+    <!-- Main Screen -->
+    <div id="main-screen" class="screen container">
+        <div class="header">
+            <h1>PureFlow Master Control</h1>
+            <button onclick="showAddROModal()">Add New RO Device</button>
+        </div>
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Search by RO ID or User Name">
+            <button id="search-button" onclick="searchDevices()">Search</button>
+        </div>
+        <div id="ro-list">
+            <!-- RO devices will be dynamically added here -->
+        </div>
+    </div>
+
+    <!-- Search Results Screen -->
+    <div id="search-results-screen" class="screen container">
+        <div class="nav-buttons">
+            <button onclick="showScreen('main-screen')">Back to Main</button>
+        </div>
+        <h2>Search Results</h2>
+        <div id="search-results">
+            <!-- Search results will be dynamically added here -->
+        </div>
+    </div>
+
+    <!-- User Details Screen -->
+    <div id="user-details-screen" class="screen container">
+        <div class="nav-buttons">
+            <button onclick="showScreen('main-screen')">Back to Main</button>
+        </div>
+        <h2>User Details</h2>
+        <div id="user-details">
+            <!-- User details will be dynamically added here -->
+        </div>
+    </div>
+
+    <!-- Add RO Device Modal -->
+    <div id="addROModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddROModal()">&times;</span>
+            <h2>Add New RO Device</h2>
+            <form id="addROForm" onsubmit="addNewRODevice(event)">
+                <input type="text" id="newROId" placeholder="RO Device ID" required>
+                <input type="text" id="newUserName" placeholder="User Name" required>
+                <input type="text" id="newUserAddress" placeholder="User Address" required>
+                <input type="tel" id="newUserContact" placeholder="User Contact Number" required>
+                <input type="number" id="newMaxWaterFlow" placeholder="Max Water Flow (L)" required min="1" step="0.1">
+                <button type="submit">Add Device</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit User Details Modal -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditUserModal()">&times;</span>
+            <h2>Edit User Details</h2>
+            <form id="editUserForm" onsubmit="saveUserDetails(event)">
+                <input type="text" id="editUserName" placeholder="User Name" required>
+                <input type="text" id="editUserAddress" placeholder="User Address" required>
+                <input type="tel" id="editUserContact" placeholder="User Contact Number" required>
+                <input type="date" id="editDueDate" required>
+                <textarea id="editPaymentHistory" placeholder="Payment History" rows="3"></textarea>
+                <button type="submit">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let devices = {};
+        let users = {};
+
+        function hideSplashScreen() {
+            document.getElementById('splash-screen').style.display = 'none';
+            showScreen('main-screen');
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => screen.style.display = 'none');
+            document.getElementById(screenId).style.display = 'block';
+            if (screenId === 'main-screen') {
+                updateROList();
+            }
+        }
+
+        function simulateDeviceData(deviceId) {
+            const device = devices[deviceId];
+            const isOnline = Math.random() > 0.2; // 80% chance of being online
+            let newData = { ...device };
+            
+            newData.isOnline = isOnline;
+            if (isOnline) {
+                newData.tdsValue = Math.random() * 1000;
+                newData.roFlowRate = Math.random() * 10;
+                newData.totalWaterDispensed += newData.roFlowRate / 60;
+                
+                if (newData.totalWaterDispensed >= newData.maxWaterFlow) {
+                    newData.isRORunning = false;
+                } else {
+                    newData.isRORunning = true;
+                }
+            } else {
+                newData.isRORunning = false;
+                newData.tdsValue = device.tdsValue;
+                newData.roFlowRate = 0;
+            }
+
+            return newData;
+        }
+
+        function updateROList() {
+            const roList = document.getElementById('ro-list');
+            roList.innerHTML = '';
+            
+            for (const [deviceId, device] of Object.entries(devices)) {
+                const roCard = document.createElement('div');
+                roCard.className = 'ro-card';
+                roCard.onclick = () => showUserDetails(deviceId);
+                roCard.innerHTML = `
+                    <h2>${deviceId}</h2>
+                    <div class="status">
+                        <span>User:</span>
+                        <span>${users[deviceId]?.name || 'N/A'}</span>
+                    </div>
+                    <div class="status">
+                        <span>Status:</span>
+                        <span class="${device.isOnline ? 'online' : 'offline'}">${device.isOnline ? 'Online' : 'Offline'}</span>
+                    </div>
+                `;
+                roList.appendChild(roCard);
+            }
+        }
+
+        function showUserDetails(deviceId) {
+            const device = devices[deviceId];
+            const user = users[deviceId];
+            const userDetails = document.getElementById('user-details');
+            userDetails.innerHTML = `
+                <h3>RO Device: ${deviceId}</h3>
+                <div class="status">
+                    <span>User Name:</span>
+                    <span>${user?.name || 'N/A'}</span>
+                </div>
+                <div class="status">
+                    <span>Address:</span>
+                    <span>${user?.address || 'N/A'}</span>
+                </div>
+                <div class="status">
+                    <span>Contact:</span>
+                    <span>${user?.contact || 'N/A'}</span>
+                </div>
+                <div class="status">
+                    <span>TDS Value:</span>
+                    <span>${device.tdsValue.toFixed(2)} ppm</span>
+                </div>
+                <div class="status">
+                    <span>RO Flow Rate:</span>
+                    <span>${device.roFlowRate.toFixed(2)} L/min</span>
+                </div>
+                <div class="status">
+                    <span>Total Water Dispensed:</span>
+                    <span>${device.totalWaterDispensed.toFixed(2)} L</span>
+                </div>
+                <div class="status">
+                    <span>Max Water Flow:</span>
+                    <span>${device.maxWaterFlow.toFixed(2)} L</span>
+                </div>
+                <div class="status">
+                    <span>RO System:</span>
+                    <span>${device.isRORunning ? 'Running' : 'Stopped'}</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress" style="width: ${(device.totalWaterDispensed / device.maxWaterFlow) * 100}%"></div>
+                </div>
+                <div class="button-group">
+                    <button onclick="resetDevice('${deviceId}')" ${!device.isOnline ? 'disabled' : ''}>Reset System</button>
+                    <button onclick="showEditUserModal('${deviceId}')">Edit User Details</button>
+                    <button onclick="removeDevice('${deviceId}')">Remove Device</button>
+                    <button onclick="callUser('${user?.contact}')">Call User</button>
+                </div>
+            `;
+            showScreen('user-details-screen');
+        }
+
+        function searchDevices() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const searchResults = document.getElementById('search-results');
+            searchResults.innerHTML = '';
+
+            for (const [deviceId, device] of Object.entries(devices)) {
+                const userName = users[deviceId]?.name.toLowerCase() || '';
+                if (deviceId.toLowerCase().includes(searchTerm) || userName.includes(searchTerm)) {
+                    const resultCard = document.createElement('div');
+                    resultCard.className = 'ro-card';
+                    resultCard.onclick = () => showUserDetails(deviceId);
+                    resultCard.innerHTML = `
+                        <h2>${deviceId}</h2>
+                        <div class="status">
+                            <span>User:</span>
+                            <span>${users[deviceId]?.name || 'N/A'}</span>
+                        </div>
+                        <div class="status">
+                            <span>Status:</span>
+                            <span class="${device.isOnline ? 'online' : 'offline'}">${device.isOnline ? 'Online' : 'Offline'}</span>
+                        </div>
+                    `;
+                    searchResults.appendChild(resultCard);
+                }
+            }
+
+            showScreen('search-results-screen');
+        }
+
+        function fetchData() {
+            for (const deviceId in devices) {
+                devices[deviceId] = simulateDeviceData(deviceId);
+            }
+            if (document.getElementById('main-screen').style.display === 'block') {
+                updateROList();
+            }
+        }
+
+        function resetDevice(deviceId) {
+            if (devices[deviceId] && devices[deviceId].isOnline) {
+                devices[deviceId].totalWaterDispensed = 0;
+                devices[deviceId].isRORunning = true;
+                saveData();
+                showUserDetails(deviceId);
+                alert(`Device ${deviceId} has been reset.`);
+            }
+        }
+
+        function showAddROModal() {
+            document.getElementById('addROModal').style.display = 'block';
+        }
+
+        function closeAddROModal() {
+            document.getElementById('addROModal').style.display = 'none';
+        }
+
+        function addNewRODevice(event) {
+            event.preventDefault();
+            const newROId = document.getElementById('newROId').value;
+            const newUserName = document.getElementById('newUserName').value;
+            const newUserAddress = document.getElementById('newUserAddress').value;
+            const newUserContact = document.getElementById('newUserContact').value;
+            const newMaxWaterFlow = parseFloat(document.getElementById('newMaxWaterFlow').value);
+            
+            if (devices[newROId]) {
+                alert('An RO device with this ID already exists.');
+                return;
+            }
+            
+            devices[newROId] = {
+                maxWaterFlow: newMaxWaterFlow,
+                totalWaterDispensed: 0,
+                isRORunning: true,
+                isOnline: true,
+                tdsValue: 0,
+                roFlowRate: 0
+            };
+
+            users[newROId] = {
+                name: newUserName,
+                address: newUserAddress,
+                contact: newUserContact,
+                dueDate: '',
+                paymentHistory: ''
+            };
+            
+            saveData();
+            updateROList();
+            closeAddROModal();
+            alert(`New RO device ${newROId} added successfully.`);
+        }
+
+        function removeDevice(deviceId) {
+            if (confirm(`Are you sure you want to remove device ${deviceId}?`)) {
+                delete devices[deviceId];
+                delete users[deviceId];
+                saveData();
+                showScreen('main-screen');
+                alert(`Device ${deviceId} has been removed.`);
+            }
+        }
+
+        function showEditUserModal(deviceId) {
+            const user = users[deviceId];
+            document.getElementById('editUserName').value = user.name;
+            document.getElementById('editUserAddress').value = user.address;
+            document.getElementById('editUserContact').value = user.contact;
+            document.getElementById('editDueDate').value = user.dueDate;
+            document.getElementById('editPaymentHistory').value = user.paymentHistory;
+            document.getElementById('editUserForm').dataset.deviceId = deviceId;
+            document.getElementById('editUserModal').style.display = 'block';
+        }
+
+        function closeEditUserModal() {
+            document.getElementById('editUserModal').style.display = 'none';
+        }
+
+        function saveUserDetails(event) {
+            event.preventDefault();
+            const deviceId = event.target.dataset.deviceId;
+            users[deviceId] = {
+                name: document.getElementById('editUserName').value,
+                address: document.getElementById('editUserAddress').value,
+                contact: document.getElementById('editUserContact').value,
+                dueDate: document.getElementById('editDueDate').value,
+                paymentHistory: document.getElementById('editPaymentHistory').value
+            };
+            saveData();
+            closeEditUserModal();
+            showUserDetails(deviceId);
+            alert('User details updated successfully!');
+        }
+
+        function saveData() {
+            localStorage.setItem('devices', JSON.stringify(devices));
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        function loadData() {
+            const savedDevices = localStorage.getItem('devices');
+            const savedUsers = localStorage.getItem('users');
+            if (savedDevices) devices = JSON.parse(savedDevices);
+            if (savedUsers) users = JSON.parse(savedUsers);
+        }
+
+        function callUser(phoneNumber) {
+            if (phoneNumber) {
+                window.location.href = `tel:${phoneNumber}`;
+            } else {
+                alert('No phone number available for this user.');
+            }
+        }
+
+        function init() {
+            loadData();
+            if (Object.keys(devices).length === 0) {
+                // Initialize with default data if no saved data
+                devices = {
+                    'RO001': { maxWaterFlow: 500, totalWaterDispensed: 0, isRORunning: true, isOnline: true, tdsValue: 0, roFlowRate: 0 },
+                    'RO002': { maxWaterFlow: 600, totalWaterDispensed: 0, isRORunning: true, isOnline: true, tdsValue: 0, roFlowRate: 0 },
+                    'RO003': { maxWaterFlow: 700, totalWaterDispensed: 0, isRORunning: true, isOnline: true, tdsValue: 0, roFlowRate: 0 }
+                };
+            }
+            if (Object.keys(users).length === 0) {
+                // Initialize with default data if no saved data
+                users = {
+                    'RO001': { name: 'John Doe', address: '123 Main St', contact: '555-1234', dueDate: '2023-07-01', paymentHistory: 'Paid on time' },
+                    'RO002': { name: 'Jane Smith', address: '456 Elm St', contact: '555-5678', dueDate: '2023-07-15', paymentHistory: 'Late payment last month' },
+                    'RO003': { name: 'Bob Johnson', address: '789 Oak St', contact: '555-9012', dueDate: '2023-07-30', paymentHistory: 'Always pays early' }
+                };
+            }
+            setTimeout(hideSplashScreen, 3000);
+            
+            fetchData();
+            setInterval(fetchData, 5000);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
+
